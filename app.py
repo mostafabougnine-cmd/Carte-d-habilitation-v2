@@ -263,7 +263,6 @@ def get_agent_photo(matricule):
         return None, "Matricule vide"
     target = str(matricule).strip().lower()
     
-    # إضافة الدوسيات كاملة باش يقلب فيها (A, B, C)
     folders = ["photo A", "photo B", "photo C", "photoA", "photoB", "photoC", "photo_c"]
     
     for folder in folders:
@@ -422,6 +421,19 @@ def generate_custom_excel():
     wb = openpyxl.load_workbook(tmpl_path)
     sheet = wb.active
 
+    # 🔹 إعدادات تكبير وتعديل أبعاد الصفحة لكي تطبع البطاقة بحجم واضح وكبير ملائم للطباعة
+    sheet.page_setup.orientation = sheet.ORIENTATION_LANDSCAPE
+    sheet.page_setup.paperSize = sheet.PAPERSIZE_A4
+    
+    # تحديد نطاق طباعة البطاقة بالكامل لكي يملأ الشاشة والطباعة بشكل واضح (مثال من العمود A إلى V ومن الصف 1 إلى 15)
+    sheet.print_area = 'A1:V15'
+    
+    # تكبير نسب العرض والارتفاع لكي لا تظهر البطاقة مصغرة في الإكسيل
+    sheet.sheet_properties.pageSetUpPr.fitToPage = True
+    sheet.page_setup.fitToWidth = 1
+    sheet.page_setup.fitToHeight = 1
+    sheet.sheet_view.zoomScale = 130  # تكبير العرض داخل برنامج الإكسيل بـ 130% لتكون مرتاحة وواضحة للعين
+
     sheet["D4"] = fonction_input
     sheet["F5"] = nom_input
     sheet["J5"] = prenom_input
@@ -435,7 +447,9 @@ def generate_custom_excel():
 
     if final_photo_source is not None:
         pil_img = PILImage.open(final_photo_source if isinstance(final_photo_source, str) else io.BytesIO(final_photo_source.read()))
-        target_w, target_h = int(2.0 * 37.8), int(1.44 * 37.8)
+        
+        # مقاسات الصورة لتناسب البطاقة بشكل كبير وواضح
+        target_w, target_h = int(3.5 * 37.8), int(2.5 * 37.8)
         pil_img = pil_img.resize((target_w, target_h), PILImage.Resampling.LANCZOS)
         
         img_temp_path = os.path.join(BASE_DIR, "_temp_photo.png")
